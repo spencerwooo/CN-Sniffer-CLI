@@ -11,7 +11,8 @@ import java.io.IOException;
  */
 public class App {
 
-    private final static int maxPackets = 10;
+    private final static int maxPackets = 3;
+    private static DataHandler dataHandler = new DataHandler();
 
     private static PcapNetworkInterface getNetworkDevice() {
         PcapNetworkInterface device = null;
@@ -23,6 +24,17 @@ public class App {
         return device;
     }
 
+    private static void postPacketManipulation(Packet packet) {
+
+        System.out.println(packet);
+
+//        if (packet.contains(TcpPacket.class)) {
+//            byte[] rawPacketData = packet.get(TcpPacket.class).getRawData();
+//            System.out.println(Arrays.toString(rawPacketData));
+//            System.out.println(dataHandler.byteStreamToString(rawPacketData));
+//        }
+    }
+
     public static void main(String[] args) throws PcapNativeException, NotOpenException {
         PcapNetworkInterface device = getNetworkDevice();
 
@@ -32,17 +44,12 @@ public class App {
 
         PcapHandle handle = device.openLive(snapLen, mode, timeout);
 
-//        String filter = "tcp port 80 and tcp port 443";
+//        String filter = "tcp";
         String filter = "";
 
         handle.setFilter(filter, BpfProgram.BpfCompileMode.OPTIMIZE);
 
-        PacketListener packetListener = new PacketListener() {
-            @Override
-            public void gotPacket(Packet packet) {
-                System.out.println(packet);
-            }
-        };
+        PacketListener packetListener = App::postPacketManipulation;
 
         try {
             handle.loop(maxPackets, packetListener);
